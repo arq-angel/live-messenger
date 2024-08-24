@@ -16,6 +16,11 @@
     <link rel="stylesheet" href="{{asset('assets/css/spacing.css')}}">
     <link rel="stylesheet" href="{{asset('assets/css/style.css')}}">
     <link rel="stylesheet" href="{{asset('assets/css/responsive.css')}}">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.css">
+
+    <!-- Scripts -->
+    @vite(['resources/css/app.css', 'resources/js/app.js', 'resources/js/messenger.js'])
 </head>
 
 <body>
@@ -38,9 +43,17 @@
 <script src="{{ asset('assets/js/slick.min.js')}}"></script>
 <script src="{{ asset('assets/js/venobox.min.js')}}"></script>
 <script src="{{ asset('assets/js/emojionearea.min.js')}}"></script>
+<script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
 
 <!--main/custom js-->
 <script src="{{ asset('assets/js/main.js')}}"></script>
+<script>
+    let notyf = new Notyf({
+        duration: 5000
+    });
+</script>
+@stack('scripts')
+
 
 </body>
 
