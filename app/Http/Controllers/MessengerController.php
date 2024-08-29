@@ -24,7 +24,7 @@ class MessengerController extends Controller
             ->paginate(10);
 
         if($records->total() < 1) {
-            $getRecords .= "<p class='text-center'>Nothing to show.</p>";
+            $getRecords .= "<p class='text-center'>Nothing to show!</p>";
         }
 
         foreach ($records as $record) {
