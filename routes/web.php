@@ -40,4 +40,7 @@ Route::group(['middleware' => 'auth'], function () {
     Route::post('messenger/make-seen', [MessengerController::class, 'makeSeen'])->name('messenger.make-seen');
     // favorite routes
     Route::post('messenger/favorite', [MessengerController::class, 'favorite'])->name('messenger.favorite');
+    // delete message
+    Route::delete('messenger/delete-message', [MessengerController::class, 'deleteMessage'])->name('messenger.delete-message');
+
 });

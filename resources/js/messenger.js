@@ -223,7 +223,6 @@ function sendTempMessageCard(message, tempID, attachment = false) {
                         </div>
                         ${message.length > 0 ? `<p class="messages">${message}</p>` : ''}
                         <span class="clock"><i class="fas fa-clock"></i> now</span>
-                        <a class="action" href="#"><i class="fas fa-trash"></i></a>
                     </div>
                 </div>
         `;
@@ -233,7 +232,6 @@ function sendTempMessageCard(message, tempID, attachment = false) {
                         <div class="wsus__single_chat chat_right">
                             <p class="messages">${message}</p>
                             <span class="clock"><i class="fas fa-clock"></i> now</span>
-                            <a class="action" href="#"><i class="fas fa-trash"></i></a>
                         </div>
                     </div>
     `;
@@ -447,7 +445,7 @@ function star(user_id) {
  *  ------------------------------------
  */
 
-function deleteMessage() {
+function deleteMessage(message_id) {
     Swal.fire({
         title: "Are you sure?",
         text: "You won't be able to revert this!",
@@ -460,10 +458,16 @@ function deleteMessage() {
         if (result.isConfirmed) {
             $.ajax({
                 method: "DELETE",
-                url: "/messenger/delete",
-                data: {},
+                url: "/messenger/delete-message",
+                data: {
+                    _token: csrf_token,
+                    message_id: message_id,
+                },
+                beforeSend: function() {
+                  $(`.message-card[data-id="${message_id}"]`).remove();
+                },
                 success: function (data) {
-
+                    updateContactItem(getMessengerId());
                 },
                 error: function (xhr, status, error) {
 
@@ -588,7 +592,9 @@ $(document).ready(function () {
     // delete message
     $("body").on("click", ".dlt-message", function(e) {
         e.preventDefault();
-        deleteMessage();
+
+        let id = $(this).data('id');
+        deleteMessage(id);
     })
 
 
