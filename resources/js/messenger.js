@@ -132,6 +132,9 @@ function IDInfo(id) {
         }, success: function (data) {
             // fetch messages
             fetchMessages(data.fetch.id, true);
+            data.favorite > 0
+                ? $(".favourite").addClass("active")
+                : $(".favourite").removeClass("active");
             $(".messenger-header").find("img").attr("src", data.fetch.avatar);
             $(".messenger-header").find("h4").text(data.fetch.name);
 
@@ -398,6 +401,36 @@ function makeSeen(status) {
     })
 }
 
+/**
+ *  ------------------------------------
+ *  Favorite
+ *  ------------------------------------
+ */
+
+function star(user_id) {
+    $(".favourite").toggleClass("active");
+
+    $.ajax({
+        method: "POST",
+        url: "/messenger/favorite",
+        data: {
+            _token: csrf_token,
+            id: getMessengerId(),
+        },
+        success: function (data) {
+            if (data.status == 'added') {
+                notyf.success('Added to favorites list.');
+            } else {
+                notyf.success('Removed from favorites list.');
+            }
+        },
+        error: function (xhr, status, error) {
+
+        }
+    })
+}
+
+
 function updateSelectedContent(user_id) {
     $("body").find(".messenger-list-item").removeClass("active");
     $("body").find(`.messenger-list-item[data-id="${user_id}"]`).addClass("active");
@@ -492,6 +525,12 @@ $(document).ready(function () {
     // contact pagination
     actionOnScroll(".messenger-contacts", function () {
         getContacts();
+    })
+
+    // add/remove to the favorite
+    $(".favourite").on("click", function (e) {
+        e.preventDefault();
+        star(getMessengerId());
     })
 
 

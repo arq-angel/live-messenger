@@ -38,4 +38,6 @@ Route::group(['middleware' => 'auth'], function () {
     Route::get('messenger/update-contact-item', [MessengerController::class, 'updateContactItem'])->name('messenger.update-contact-item');
     // update contact item
     Route::post('messenger/make-seen', [MessengerController::class, 'makeSeen'])->name('messenger.make-seen');
+    // favorite routes
+    Route::post('messenger/favorite', [MessengerController::class, 'favorite'])->name('messenger.favorite');
 });
