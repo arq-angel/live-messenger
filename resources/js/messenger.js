@@ -132,6 +132,17 @@ function IDInfo(id) {
         }, success: function (data) {
             // fetch messages
             fetchMessages(data.fetch.id, true);
+
+            //load gallery
+            $(".wsus__chat_info_gallery").html("");
+
+            if (data?.shared_photos) {
+                $(".nothing_share").addClass("d-none");
+                $(".wsus__chat_info_gallery").html(data.shared_photos);
+            } else {
+                $(".nothing_share").removeClass("d-none");
+            }
+
             data.favorite > 0
                 ? $(".favourite").addClass("active")
                 : $(".favourite").removeClass("active");
@@ -430,6 +441,37 @@ function star(user_id) {
     })
 }
 
+/**
+ *  ------------------------------------
+ *  Delete message
+ *  ------------------------------------
+ */
+
+function deleteMessage() {
+    Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, delete it!"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            $.ajax({
+                method: "DELETE",
+                url: "/messenger/delete",
+                data: {},
+                success: function (data) {
+
+                },
+                error: function (xhr, status, error) {
+
+                }
+            })
+        }
+    });
+}
 
 function updateSelectedContent(user_id) {
     $("body").find(".messenger-list-item").removeClass("active");
@@ -447,6 +489,16 @@ function scrollToBottom(container) {
     $(container).stop().animate({
         scrollTop: $(container)[0].scrollHeight
     });
+}
+
+/**
+ *  ------------------------------------
+ *  Initialize venobox.js
+ *  ------------------------------------
+ */
+
+function initVenobox() {
+    $(".venobox").venobox();
 }
 
 
@@ -531,6 +583,12 @@ $(document).ready(function () {
     $(".favourite").on("click", function (e) {
         e.preventDefault();
         star(getMessengerId());
+    })
+
+    // delete message
+    $("body").on("click", ".dlt-message", function(e) {
+        e.preventDefault();
+        deleteMessage();
     })
 
 
