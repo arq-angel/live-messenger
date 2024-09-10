@@ -24,7 +24,9 @@ function enableChatBoxLoader() {
 }
 
 function disableChatBoxLoader() {
+    $(".wsus__chat_app").removeClass("show_info").addClass("show_small_info");
     $(".wsus__message_paceholder").addClass("d-none");
+    $(".wsus__message_paceholder_blank").addClass("d-none");
 }
 
 function imagePreview(input, selector) {
@@ -53,17 +55,24 @@ function searchUsers(query) {
 
     if (!setSearchLoading && !noMoreDataSearch) {
         $.ajax({
-            method: 'GET', url: '/messenger/search', data: {query: query, page: searchPage}, beforeSend: function () {
+            method: 'GET',
+            url: '/messenger/search',
+            data: {
+                query: query,
+                page: searchPage
+            },
+            beforeSend: function () {
                 setSearchLoading = true;
                 let loader = `
-            <div class="text-center search-loader">
-             <div class="spinner-border text-primary" role="status">
-               <span class="visually-hidden">Loading...</span>
-             </div>
-            </div>
+                    <div class="text-center search-loader">
+                     <div class="spinner-border text-primary" role="status">
+                       <span class="visually-hidden">Loading...</span>
+                     </div>
+                    </div>
                 `;
                 $('.user_search_list_result').append(loader);
-            }, success: function (data) {
+            },
+            success: function (data) {
                 setSearchLoading = false;
                 $('.user_search_list_result').find('.search-loader').remove();
                 if (searchPage < 2) {
@@ -74,7 +83,8 @@ function searchUsers(query) {
 
                 noMoreDataSearch = searchPage >= data?.last_page;
                 if (!noMoreDataSearch) searchPage += 1;
-            }, error: function (xhr, status, error) {
+            },
+            error: function (xhr, status, error) {
                 setSearchLoading = false;
                 $('.user_search_list_result').find('.search-loader').remove();
             }
@@ -116,6 +126,8 @@ function IDInfo(id) {
             NProgress.start();
             enableChatBoxLoader();
         }, success: function (data) {
+            // fetch messages
+            fetchMessages(data.fetch.id, true);
             $(".messenger-header").find("img").attr("src", data.fetch.avatar);
             $(".messenger-header").find("h4").text(data.fetch.name);
 
@@ -123,7 +135,7 @@ function IDInfo(id) {
             $(".messenger-info-view").find(".user_name").text(data.fetch.name);
             $(".messenger-info-view").find(".user_unique_name").text(data.fetch.user_name);
             NProgress.done();
-            disableChatBoxLoader();
+
         }, error: function (xhr, status, error) {
             disableChatBoxLoader();
         }
@@ -162,7 +174,7 @@ function sendMessage() {
                 } else {
                     messageBoxContainer.append(sendTempMessageCard(inputValue, tempID));
                 }
-
+                scrollToBottom(messageBoxContainer);
                 messageFormReset();
             },
             success: function (data) {
@@ -217,6 +229,81 @@ function messageFormReset() {
 
 /**
  *  ------------------------------------
+ *  Fetch messages from a database
+ *  ------------------------------------
+ */
+
+let messagesPage = 1;
+let noMoreMessages = false;
+let messagesLoading = false;
+
+function fetchMessages(id, newFetch = false) {
+    if (newFetch) {
+        messagesPage = 1;
+        noMoreMessages = false;
+    }
+    if (!noMoreMessages && !messagesLoading) {
+        $.ajax({
+            method: "GET",
+            url: '/messenger/fetch-messages',
+            data: {
+                _token: csrf_token,
+                id: id,
+                page: messagesPage
+            },
+            beforeSend: function() {
+                let loader = `
+                    <div class="text-center messages-loader">
+                     <div class="spinner-border text-primary" role="status">
+                       <span class="visually-hidden">Loading...</span>
+                     </div>
+                    </div>
+                `;
+                messageBoxContainer.prepend(loader);
+            },
+            success: function (data) {
+                messagesLoading = false;
+                // remove the loader
+                messageBoxContainer.find(".messages-loader").remove();
+                if (messagesPage === 1) {
+                    messageBoxContainer.html(data.messages);
+                    scrollToBottom(messageBoxContainer);
+                } else {
+                    const lastMsg = $(messageBoxContainer).find(".message-card").first();
+                    const curOffset = lastMsg.offset().top - messageBoxContainer.scrollTop();
+
+                    messageBoxContainer.prepend(data.messages);
+                    messageBoxContainer.scrollTop(lastMsg.offset().top - curOffset);
+                }
+
+                // pagination lock and page increment
+                noMoreMessages = messagesPage >= data?.last_page;
+                if (!noMoreMessages) messagesPage++;
+                disableChatBoxLoader();
+
+            },
+            error: function (xhr, status, error) {
+                console.log(error);
+            }
+        })
+    }
+}
+
+/**
+ *  ------------------------------------
+ *  Slide to bottom on action
+ *  ------------------------------------
+ */
+
+function scrollToBottom(container) {
+    $(container).stop().animate({
+        scrollTop: $(container)[0].scrollHeight
+    });
+}
+
+
+/**
+ *  ------------------------------------
  *  On Dom Load
  *  ------------------------------------
  */
@@ -245,7 +332,6 @@ $(document).ready(function () {
         searchUsers(value);
     })
 
-
     // click action for messenger list item
     $("body").on("click", ".messenger-list-item", function () {
         const dataId = $(this).attr("data-id");
@@ -269,4 +355,11 @@ $(document).ready(function () {
     $(".cancel-attachment").on("click", function () {
         messageFormReset();
     })
+
+    //message pagination
+    actionOnScroll(".wsus__chat_area_body", function () {
+        fetchMessages(getMessengerId());
+    }, true)
+
+
 });

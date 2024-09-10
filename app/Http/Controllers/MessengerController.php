@@ -66,7 +66,9 @@ class MessengerController extends Controller
         $message->from_id = Auth::user()->id;
         $message->to_id = $request->id;
         $message->body = $request->message;
-        if ($attachmentPath) $message->attachment = json_encode($attachmentPath);
+        if ($attachmentPath) {
+            $message->attachment = json_encode($attachmentPath);
+        }
         $message->save();
 
         return response()->json([
@@ -78,5 +80,33 @@ class MessengerController extends Controller
     private function messageCard($message, $attachment = false)
     {
         return view("messenger.components.message-card", compact('message', 'attachment'))->render();
+    }
+
+    // fetch messages from database
+    public function fetchMessages(Request $request)
+    {
+        $messages = Message::where("from_id", Auth::user()->id)->where('to_id', $request['id'])
+            ->orWhere("from_id", $request->id)->where('to_id', AUth::user()->id)
+            ->latest()->paginate(20);
+
+        $response = [
+            'last_page' => $messages->lastPage(),
+            'last_message' => $messages->last(),
+            'messages' => '',
+        ];
+
+        if (count($messages) < 1) {
+            $response['messages'] = "<div class='d-flex justify-content-center align-items-center mx-auto h-100'><p>Say 'Hi' and start messaging.</p></div>";
+            return response()->json($response);
+        }
+
+        $allMessages = '';
+        foreach ($messages->reverse() as $message) {
+            $allMessages .= $this->messageCard($message, $message->attachment ? true : false);
+        }
+
+        $response['messages'] = $allMessages;
+
+        return response()->json($response);
     }
 }
