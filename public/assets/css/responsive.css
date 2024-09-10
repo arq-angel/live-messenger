@@ -1,6 +1,6 @@
 @media (min-width: 1400px) and (max-width: 1600px) {
     .wsus__user_list_area_height {
-        max-height: 400px;
+        /*max-height: 400px;*/
     }
 
     .wsus__chat_area_body {
@@ -57,7 +57,7 @@
     }
 
     .wsus__user_list_area_height {
-        max-height: 400px;
+        /*max-height: 400px;*/
     }
 
     .wsus__single_chat .venobox img {
@@ -103,7 +103,7 @@
     }
 
     .wsus__user_list_area_height {
-        max-height: 350px;
+        /*max-height: 350px;*/
     }
 
     .wsus__chat_area_body {
@@ -166,7 +166,7 @@
     }
 
     .wsus__user_list_area_height {
-        max-height: 350px;
+        /*max-height: 350px;*/
     }
 
     .show_small_info .wsus__chat_area {
@@ -207,7 +207,7 @@
     }
 
     .wsus__user_list_area_height {
-        max-height: 370px;
+        /*max-height: 370px;*/
     }
 
     .wsus__chat_area {
@@ -285,7 +285,7 @@
     }
 
     .wsus__user_list_area_height {
-        max-height: 370px;
+        /*max-height: 370px;*/
     }
 
     .wsus__chat_area {

@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Traits\FileUploadTrait;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class MessengerController extends Controller
 {
@@ -85,7 +86,7 @@ class MessengerController extends Controller
     // fetch messages from database
     public function fetchMessages(Request $request)
     {
-        $messages = Message::where("from_id", Auth::user()->id)->where('to_id', $request['id'])
+        $messages = Message::where("from_id", Auth::user()->id)->where('to_id', $request->id)
             ->orWhere("from_id", $request->id)->where('to_id', AUth::user()->id)
             ->latest()->paginate(20);
 
@@ -108,5 +109,80 @@ class MessengerController extends Controller
         $response['messages'] = $allMessages;
 
         return response()->json($response);
+    }
+
+    // fetch contacts from database
+    public function fetchContacts(Request $request)
+    {
+        $users = Message::join('users', function ($join) {
+            $join->on('messages.from_id', '=', 'users.id')
+                ->orOn('messages.to_id', '=', 'users.id');
+        })
+            ->where(function ($q) {
+                $q->where("messages.from_id", Auth::user()->id)
+                    ->orWhere("messages.to_id", Auth::user()->id);
+            })
+            ->where("users.id", "!=", Auth::user()->id)
+            ->select('users.*', DB::raw('MAX(messages.created_at) max_created_at'))
+            ->orderBy("max_created_at", "DESC")
+            ->groupBy("users.id")
+            ->paginate(10);
+
+        if (count($users) > 0) {
+            $contacts = '';
+            foreach ($users as $user) {
+                $contacts .= $this->getContactItem($user);
+            }
+        } else {
+            $contacts = "<p>Your contact list is empty!</p>";
+        }
+
+        return response()->json([
+            'contacts' => $contacts,
+            'last_page' => $users->lastPage(),
+        ]);
+    }
+
+    private function getContactItem($user)
+    {
+        $lastMessage = Message::where("from_id", Auth::user()->id)->where('to_id', $user->id)
+            ->orWhere("from_id", $user->id)->where('to_id', AUth::user()->id)
+            ->latest()->first();
+
+        $unseenCounter = Message::where("from_id", $user->id)->where("to_id", Auth::user()->id)->where(
+            "seen",
+            0
+        )->count();
+
+        return view("messenger.components.contact-list-item", compact("lastMessage", "unseenCounter", "user"))->render(
+        );
+    }
+
+    // update contact item
+    public function updateContactItem(Request $request)
+    {
+        // get user data
+        $user = User::where('id', '=', $request->user_id)->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'user not found',
+            ], 401);
+        }
+
+        $contactItem = $this->getContactItem($user);
+
+        return response()->json([
+            'contact_item' => $contactItem,
+        ], 200);
+    }
+
+    public function makeSeen(Request $request)
+    {
+        Message::where("from_id", $request->id)
+            ->where('to_id', Auth::user()->id)
+            ->where('seen', 0)->update(['seen' => 1]);
+
+        return true;
     }
 }
